@@ -14,18 +14,22 @@ public class Move : MonoBehaviour
     //how far the unit can move in a single turn
     public int _range;
     public Logic logic;
+    public AudioClip MoveRejected;
+    public AudioSource AudioSource;
     // Start by connecting to localHost and initializing the position
     void Start()
     {
         logic = GameObject.FindGameObjectWithTag("LocalHost").GetComponent<Logic>();
         _CurrentPos[0] = Mathf.RoundToInt(transform.position[0]);
         _CurrentPos[1] = Mathf.RoundToInt(transform.position[1]);
+        logic._BoardLayout[_CurrentPos[0] + 5, _CurrentPos[1] + 4] = _type;
     }
 
     // Update is called once per frame
     void Update()
     {
-        //if the left mouse is clicked, start the move script
+        //The move script, triggered by the left mouse button
+        //send all relevent information to localHost when moving
         if (Input.GetMouseButtonDown(0))
         {
             if (logic._MousePosition.SequenceEqual(_CurrentPos))
@@ -34,13 +38,11 @@ public class Move : MonoBehaviour
                 
                 if (_Moving)
                 {
-                    
                     _Moving = false;
                     logic._Controling = false;
                 }
                 else if (!logic._Controling)
                 {
-                    
                     _Moving = true;
                     logic._Controling = true;
                     logic._StartingPosition = _CurrentPos;
@@ -51,18 +53,20 @@ public class Move : MonoBehaviour
             {
                 //if is alread selected to move and a different tile is clicked, check the distance and move there if it's close enough
                 _distance = Mathf.Sqrt((logic._MousePosition[0] - _CurrentPos[0]) * (logic._MousePosition[0] - _CurrentPos[0]) + (logic._MousePosition[1] - _CurrentPos[1]) * (logic._MousePosition[1] - _CurrentPos[1]));
-                if (_distance <= _range)
+                if (_distance <= _range && logic._BoardLayout[logic._MousePosition[0] + 5, logic._MousePosition[1] + 4].Equals("Empty"))
                 {
+                    logic._BoardLayout[_CurrentPos[0] + 5, _CurrentPos[1] + 4] = "Empty";
                     transform.position = new Vector2(logic._MousePosition[0], logic._MousePosition[1]);
                     _CurrentPos[0] = Mathf.RoundToInt(transform.position[0]);
                     _CurrentPos[1] = Mathf.RoundToInt(transform.position[1]);
+                    logic._BoardLayout[logic._MousePosition[0] + 5, logic._MousePosition[1] + 4] = _type;
                     logic._Controling = false;
                     _Moving = false;
                 }
                 else
                 {
-                    logic._Controling = false;
-                    _Moving = false;
+                    AudioSource.clip = MoveRejected;
+                    AudioSource.Play();
                 }
             }
         }
