@@ -36,7 +36,7 @@ public class Squarecode : MonoBehaviour
         if (logic._Controling)
         {
             _distence = Mathf.Sqrt((logic._StartingPosition[0] - _pos[0]) * (logic._StartingPosition[0] - _pos[0]) + (logic._StartingPosition[1] - _pos[1]) * (logic._StartingPosition[1] - _pos[1]));
-            if(_distence <= logic._range)
+            if(_distence <= logic._range && logic._BoardLayout[_pos[0] + 5, _pos[1] + 4].Equals("Empty"))
             {
                 SpriteRender.color = Color.lightBlue;
             }
@@ -46,4 +46,3 @@ public class Squarecode : MonoBehaviour
         }
     }
 }
-
