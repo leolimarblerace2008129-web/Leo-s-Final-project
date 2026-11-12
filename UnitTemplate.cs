@@ -1,3 +1,4 @@
+using NUnit.Framework.Internal;
 using System.Linq;
 using UnityEngine;
 //The defult Unit code, includes basic move and attack code. all unit variations will extend this script
@@ -19,6 +20,7 @@ public class Move : MonoBehaviour
     public int _moveRange;
     //how far the unit can attack in a single turn
     public int _attackRange;
+    public int _Actions = 2;
     public Logic logic;
     public AudioClip MoveRejected;
     public AudioSource AudioSource;
@@ -36,88 +38,107 @@ public class Move : MonoBehaviour
     {
         //The move script, triggered by the left mouse button
         //send all relevent information to localHost when moving
-        if (Input.GetMouseButtonDown(1))
+        if (logic._PlayerTurn && _Actions > 0)
         {
-            if (logic._MousePosition.SequenceEqual(_CurrentPos))
+            if (Input.GetMouseButtonDown(1))
             {
-                //toggle if the unit is moving when it's clicked
-                if (_Moving)
+                if (logic._MousePosition.SequenceEqual(_CurrentPos))
                 {
-                    
-                    _Moving = false;
-                    logic._Controling = false;
+                    //toggle if the unit is moving when it's clicked
+                    if (_Moving)
+                    {
+
+                        _Moving = false;
+                        logic._Controling = false;
+                    }
+                    else if (!logic._Controling && !logic._Attacking)
+                    {
+                        _Moving = true;
+                        logic._Controling = true;
+                        logic._StartingPosition = _CurrentPos;
+                        logic._range = _moveRange;
+                    }
                 }
-                else if (!logic._Controling && !logic._Attacking)
+                else if (_Moving)
                 {
-                    _Moving = true;
-                    logic._Controling = true;
-                    logic._StartingPosition = _CurrentPos;
-                    logic._range = _moveRange;
+                    //if it is already selected to move and a different tile is clicked, move there if it's a valid destination
+                    _distance = Mathf.Sqrt((logic._MousePosition[0] - _CurrentPos[0]) * (logic._MousePosition[0] - _CurrentPos[0]) + (logic._MousePosition[1] - _CurrentPos[1]) * (logic._MousePosition[1] - _CurrentPos[1]));
+                    if (_distance <= _moveRange && logic._BoardLayout[logic._MousePosition[0] + 5, logic._MousePosition[1] + 4].Equals("Empty"))
+                    {
+                        logic._BoardLayout[_CurrentPos[0] + 5, _CurrentPos[1] + 4] = "Empty";
+                        transform.position = new Vector2(logic._MousePosition[0], logic._MousePosition[1]);
+                        _CurrentPos[0] = Mathf.RoundToInt(transform.position[0]);
+                        _CurrentPos[1] = Mathf.RoundToInt(transform.position[1]);
+                        logic._BoardLayout[logic._MousePosition[0] + 5, logic._MousePosition[1] + 4] = _type;
+                        logic._Controling = false;
+                        _Moving = false;
+                        _Actions--;
+                        if (_Actions == 0)
+                        {
+                            logic._UnitsToMove--;
+                        }
+                    }
+                    else
+                    {
+                        AudioSource.clip = MoveRejected;
+                        AudioSource.Play();
+
+                    }
                 }
             }
-            else if (_Moving)
+            //Attacking code
+            if (Input.GetMouseButtonDown(0))
             {
-                //if it is already selected to move and a different tile is clicked, move there if it's a valid destination
-                _distance = Mathf.Sqrt((logic._MousePosition[0] - _CurrentPos[0]) * (logic._MousePosition[0] - _CurrentPos[0]) + (logic._MousePosition[1] - _CurrentPos[1]) * (logic._MousePosition[1] - _CurrentPos[1]));
-                if (_distance <= _moveRange && logic._BoardLayout[logic._MousePosition[0] + 5, logic._MousePosition[1] + 4].Equals("Empty"))
+                if (logic._MousePosition.SequenceEqual(_CurrentPos))
                 {
-                    logic._BoardLayout[_CurrentPos[0] + 5, _CurrentPos[1] + 4] = "Empty";
-                    transform.position = new Vector2(logic._MousePosition[0], logic._MousePosition[1]);
-                    _CurrentPos[0] = Mathf.RoundToInt(transform.position[0]);
-                    _CurrentPos[1] = Mathf.RoundToInt(transform.position[1]);
-                    logic._BoardLayout[logic._MousePosition[0] + 5, logic._MousePosition[1] + 4] = _type;
-                    logic._Controling = false;
-                    _Moving = false;
+                    //toggle if the unit is moving when it's clicked
+
+                    if (_Attacking)
+                    {
+
+                        _Attacking = false;
+                        logic._Attacking = false;
+                    }
+                    else if (!logic._Controling && !logic._Attacking)
+                    {
+                        _Attacking = true;
+                        logic._Attacking = true;
+                        logic._StartingPosition = _CurrentPos;
+                        logic._range = _attackRange;
+                    }
                 }
-                else
+                else if (_Attacking)
                 {
-                    AudioSource.clip = MoveRejected;
-                    AudioSource.Play();
-                    
+                    //if it is already selected to move and a different tile is clicked, move there if it's a valid destination
+                    _distance = Mathf.Sqrt((logic._MousePosition[0] - _CurrentPos[0]) * (logic._MousePosition[0] - _CurrentPos[0]) + (logic._MousePosition[1] - _CurrentPos[1]) * (logic._MousePosition[1] - _CurrentPos[1]));
+                    if (_distance <= _attackRange && logic._BoardLayout[logic._MousePosition[0] + 5, logic._MousePosition[1] + 4].Equals("Defult Enemy"))
+                    {
+                        logic._Attack(logic._MousePosition, _MinDamage, _MaxDamage);
+                        logic._Attacking = false;
+                        _Attacking = false;
+                        _Actions--;
+                        if(_Actions == 0)
+                        {
+                            logic._UnitsToMove--;
+                        }
+
+                    }
+                    else
+                    {
+                        AudioSource.clip = MoveRejected;
+                        AudioSource.Play();
+
+                    }
                 }
             }
         }
-        //Attacking code
-        if (Input.GetMouseButtonDown(0))
-        {
-            if (logic._MousePosition.SequenceEqual(_CurrentPos))
-            {
-                //toggle if the unit is moving when it's clicked
+        
+    }
 
-                if (_Attacking)
-                {
-
-                    _Attacking = false;
-                    logic._Attacking = false;
-                }
-                else if (!logic._Controling && !logic._Attacking)
-                {
-                    _Attacking = true;
-                    logic._Attacking = true;
-                    logic._StartingPosition = _CurrentPos;
-                    logic._range = _attackRange;
-                }
-            }
-            else if (_Attacking)
-            {
-                //if it is already selected to move and a different tile is clicked, move there if it's a valid destination
-                _distance = Mathf.Sqrt((logic._MousePosition[0] - _CurrentPos[0]) * (logic._MousePosition[0] - _CurrentPos[0]) + (logic._MousePosition[1] - _CurrentPos[1]) * (logic._MousePosition[1] - _CurrentPos[1]));
-                if (_distance <= _attackRange && logic._BoardLayout[logic._MousePosition[0] + 5, logic._MousePosition[1] + 4].Equals("Defult Enemy"))
-                {
-                    Debug.Log("Try Attacked");
-                    logic._Attack(logic._MousePosition, _MinDamage, _MaxDamage);
-                    logic._Attacking = false;
-                    _Attacking = false;
-                    
-                }
-                else
-                {
-                    AudioSource.clip = MoveRejected;
-                    AudioSource.Play();
-
-                }
-            }
-        }
+    public void Reset()
+    {
+        _Actions = 2;
+        logic._UnitsToMove++;
     }
 
 }
