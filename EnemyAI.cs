@@ -1,4 +1,4 @@
-using System;
+//using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering.Universal.Internal;
@@ -11,7 +11,8 @@ public class EnemyAI : MonoBehaviour
     //the type of enemy
     public string _type;
     //the current health of the enemy
-    public int _Health = 5;
+    public float _Health;
+    public float _MaxHealth;
     //final field that resets logic's attack position
     public int[] _AttackReset = { -999, -999 };
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -22,22 +23,27 @@ public class EnemyAI : MonoBehaviour
         _CurrentEnemyPos[1] = Mathf.RoundToInt(transform.position[1]);
         Debug.Log("Real pos: " + _CurrentEnemyPos[0] + "," + _CurrentEnemyPos[1]);
         logic._BoardLayout[_CurrentEnemyPos[0] + 5, _CurrentEnemyPos[1] + 4] = _type;
+        _Health = _MaxHealth;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (logic._AttackPos.SequenceEqual(_CurrentEnemyPos))
+        
+    }
+    public void getHit(int[] _pos, int _MinDamage, int _MaxDamage)
+    {
+        //If someone calls attack on the position this enemy is on, take damage
+        if (_pos.SequenceEqual(_CurrentEnemyPos))
         {
-            _Health -= logic._MaxDamage;
-            logic._Attack(_AttackReset, 0, 0);
+            _Health -= Random.Range(_MinDamage, _MaxDamage);
             if (_Health <= 0)
             {
-                Destroy(gameObject);
                 logic._BoardLayout[_CurrentEnemyPos[0] + 5, _CurrentEnemyPos[1] + 4] = "Empty";
+                logic._EnemiesRemaining--;
+                Destroy(gameObject);
             }
         }
     }
     
 }
-
