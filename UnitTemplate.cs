@@ -1,18 +1,24 @@
 using System.Linq;
 using UnityEngine;
-
+//The defult Unit code, includes basic move and attack code. all unit variations will extend this script
 public class Move : MonoBehaviour
 {
     //the unit's position, used for relocation
     public int[] _CurrentPos = new int[2];
     //the type of unit this is
-    public string type;
+    public string _type;
     //if the unit currenly selected to move
     public bool _Moving = false;
+    //if the unit currenly selected to attack
+    public bool _Attacking = false;
+    public int _MinDamage;
+    public int _MaxDamage;
     //used to calculate the distance between the current and target location when moving
     private float _distance;
     //how far the unit can move in a single turn
-    public int _range;
+    public int _moveRange;
+    //how far the unit can attack in a single turn
+    public int _attackRange;
     public Logic logic;
     public AudioClip MoveRejected;
     public AudioSource AudioSource;
@@ -30,30 +36,30 @@ public class Move : MonoBehaviour
     {
         //The move script, triggered by the left mouse button
         //send all relevent information to localHost when moving
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(1))
         {
             if (logic._MousePosition.SequenceEqual(_CurrentPos))
             {
                 //toggle if the unit is moving when it's clicked
-                
                 if (_Moving)
                 {
+                    
                     _Moving = false;
                     logic._Controling = false;
                 }
-                else if (!logic._Controling)
+                else if (!logic._Controling && !logic._Attacking)
                 {
                     _Moving = true;
                     logic._Controling = true;
                     logic._StartingPosition = _CurrentPos;
-                    logic._range = _range;
+                    logic._range = _moveRange;
                 }
             }
             else if (_Moving)
             {
-                //if is alread selected to move and a different tile is clicked, check the distance and move there if it's close enough
+                //if it is already selected to move and a different tile is clicked, move there if it's a valid destination
                 _distance = Mathf.Sqrt((logic._MousePosition[0] - _CurrentPos[0]) * (logic._MousePosition[0] - _CurrentPos[0]) + (logic._MousePosition[1] - _CurrentPos[1]) * (logic._MousePosition[1] - _CurrentPos[1]));
-                if (_distance <= _range && logic._BoardLayout[logic._MousePosition[0] + 5, logic._MousePosition[1] + 4].Equals("Empty"))
+                if (_distance <= _moveRange && logic._BoardLayout[logic._MousePosition[0] + 5, logic._MousePosition[1] + 4].Equals("Empty"))
                 {
                     logic._BoardLayout[_CurrentPos[0] + 5, _CurrentPos[1] + 4] = "Empty";
                     transform.position = new Vector2(logic._MousePosition[0], logic._MousePosition[1]);
@@ -67,6 +73,48 @@ public class Move : MonoBehaviour
                 {
                     AudioSource.clip = MoveRejected;
                     AudioSource.Play();
+                    
+                }
+            }
+        }
+        //Attacking code
+        if (Input.GetMouseButtonDown(0))
+        {
+            if (logic._MousePosition.SequenceEqual(_CurrentPos))
+            {
+                //toggle if the unit is moving when it's clicked
+
+                if (_Attacking)
+                {
+
+                    _Attacking = false;
+                    logic._Attacking = false;
+                }
+                else if (!logic._Controling && !logic._Attacking)
+                {
+                    _Attacking = true;
+                    logic._Attacking = true;
+                    logic._StartingPosition = _CurrentPos;
+                    logic._range = _attackRange;
+                }
+            }
+            else if (_Attacking)
+            {
+                //if it is already selected to move and a different tile is clicked, move there if it's a valid destination
+                _distance = Mathf.Sqrt((logic._MousePosition[0] - _CurrentPos[0]) * (logic._MousePosition[0] - _CurrentPos[0]) + (logic._MousePosition[1] - _CurrentPos[1]) * (logic._MousePosition[1] - _CurrentPos[1]));
+                if (_distance <= _attackRange && logic._BoardLayout[logic._MousePosition[0] + 5, logic._MousePosition[1] + 4].Equals("Defult Enemy"))
+                {
+                    Debug.Log("Try Attacked");
+                    logic._Attack(logic._MousePosition, _MinDamage, _MaxDamage);
+                    logic._Attacking = false;
+                    _Attacking = false;
+                    
+                }
+                else
+                {
+                    AudioSource.clip = MoveRejected;
+                    AudioSource.Play();
+
                 }
             }
         }
@@ -75,5 +123,4 @@ public class Move : MonoBehaviour
 }
     
         
-
 
