@@ -16,15 +16,13 @@ public class Logic : MonoBehaviour
     public bool _Controling = false;
     //is a unit currently selected to attack?
     public bool _Attacking = false;
-    //tile attacked, used by units and enemies to tell each other to get hit
-    public int[] _AttackPos = { -999, -999 };
-    //minimum damage of the current attack
-    public int _MinDamage;
-    //maximum damage of the current attack
-    public int _MaxDamage;
     //the current status of every tile on the board
     public string[,] _BoardLayout = new string[11,9];
+    public bool _PlayerTurn = true;
+    public int _UnitsToMove;
+    public int _EnemiesRemaining;
     public EnemyAI enemy;
+    public Move Unit;
     
     void Start()
     {
@@ -45,21 +43,49 @@ public class Logic : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        if(_PlayerTurn && _UnitsToMove == 0)
+        {
+            EnemyTurn();
+        }
+        if(SceneManager.GetActiveScene().name == "Level 1" && _EnemiesRemaining == 0)
+        {
+            SceneManager.LoadScene("Win");
+        }
     }
     //Start the game, referenced by the start button
     public void _Start()
     {
         SceneManager.LoadScene("Level 1");
+        _UnitsToMove = 3;
+        _EnemiesRemaining = 3;
+        _PlayerTurn = true;
      
     }
     //Used by units and enemies to create an attack
     public void _Attack(int[] _pos, int _MinDamage, int _MaxDamage)
     {
-
-        _AttackPos = _pos;
-        this._MaxDamage = _MaxDamage;
-        this._MinDamage = _MinDamage;
+        EnemyAI[] enemies = FindObjectsByType<EnemyAI>();
+        foreach (EnemyAI enemy in enemies)
+        {
+            enemy.getHit(_pos, _MinDamage, _MaxDamage);
+        }
         
+    }
+    //Start the enemy turn
+    public void EnemyTurn()
+    {
+        _PlayerTurn = false;
+        PlayerTurn();
+    }
+    //Start the player turn
+    public void PlayerTurn()
+    {
+        //search for the units and run their reset method
+        Move[] units = FindObjectsByType<Move>();
+        foreach (Move unit in units)
+        {
+            unit.Reset();
+        }
+        _PlayerTurn = true;
     }
 }
