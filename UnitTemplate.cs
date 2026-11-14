@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using NUnit.Framework.Internal;
 using System.Linq;
 using UnityEngine;
@@ -20,7 +21,12 @@ public class Move : MonoBehaviour
     public int _moveRange;
     //how far the unit can attack in a single turn
     public int _attackRange;
+    //how many moves the unit has left this turn
     public int _Actions = 2;
+    //How much health is left
+    public float _Health;
+    //how much health the unit can have
+    public int _MaxHealth;
     public Logic logic;
     public AudioClip MoveRejected;
     public AudioSource AudioSource;
@@ -31,12 +37,13 @@ public class Move : MonoBehaviour
         _CurrentPos[0] = Mathf.RoundToInt(transform.position[0]);
         _CurrentPos[1] = Mathf.RoundToInt(transform.position[1]);
         logic._BoardLayout[_CurrentPos[0] + 5, _CurrentPos[1] + 4] = _type;
+        _Health = _MaxHealth;
     }
 
     // Update is called once per frame
     void Update()
     {
-        //The move script, triggered by the left mouse button
+        //The move script, triggered by the right mouse button
         //send all relevent information to localHost when moving
         if (logic._PlayerTurn && _Actions > 0)
         {
@@ -91,7 +98,7 @@ public class Move : MonoBehaviour
             {
                 if (logic._MousePosition.SequenceEqual(_CurrentPos))
                 {
-                    //toggle if the unit is moving when it's clicked
+                    //toggle if the unit is attacking when it's clicked
 
                     if (_Attacking)
                     {
@@ -109,7 +116,7 @@ public class Move : MonoBehaviour
                 }
                 else if (_Attacking)
                 {
-                    //if it is already selected to move and a different tile is clicked, move there if it's a valid destination
+                    //if it is already selected to attack and a different tile is clicked, call _Attack method there
                     _distance = Mathf.Sqrt((logic._MousePosition[0] - _CurrentPos[0]) * (logic._MousePosition[0] - _CurrentPos[0]) + (logic._MousePosition[1] - _CurrentPos[1]) * (logic._MousePosition[1] - _CurrentPos[1]));
                     if (_distance <= _attackRange && logic._BoardLayout[logic._MousePosition[0] + 5, logic._MousePosition[1] + 4].Equals("Defult Enemy"))
                     {
@@ -134,11 +141,24 @@ public class Move : MonoBehaviour
         }
         
     }
-
+    //take damage if an enemy calls attack on this square
+    public void getHit(int[] _pos, int _MinDamage, int _MaxDamage)
+    {
+        if (_pos.SequenceEqual(_CurrentPos))
+        {
+            _Health -= Random.Range(_MinDamage, _MaxDamage + 1);
+            if (_Health <= 0)
+            {
+                logic._BoardLayout[_CurrentPos[0] + 5, _CurrentPos[1] + 4] = "Empty";
+                logic._UnitsRemaining--;
+                Destroy(gameObject);
+            }
+        }
+    }
     public void Reset()
     {
         _Actions = 2;
-        logic._UnitsToMove++;
+        
     }
 
 }
