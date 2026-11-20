@@ -1,13 +1,13 @@
 using System.Linq;
 using UnityEngine;
-
+using UnityEngine.UIElements;
+//The tiles on the battle field. Lights up to tell the player which tiles are valid when moving or attacking
+//Now also tracks the mouse position
 public class Squarecode : MonoBehaviour
 {
     //this square's position on the board
     public int[] _pos = new int[2];
     public Logic logic;
-    //if the mouse is hovering over this square
-    public bool _Huver = false;
     //used to calculate if this is a valid destination when a unit moves
     private float _distence;
     public SpriteRenderer SpriteRender;
@@ -22,15 +22,7 @@ public class Squarecode : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //check if the mouse is hovering over this square
-        if(logic._MousePosition.SequenceEqual(_pos))
-        {
-            _Huver = true;
-        }
-        else
-        {
-            _Huver = false;
-        }
+       
 
         //recieve the data from logic and turn blue if this a unit is trying to move and this square is a vaild destination
         if (logic._Controling)
@@ -62,5 +54,11 @@ public class Squarecode : MonoBehaviour
         {
             SpriteRender.color = Color.white;
         }
+    }
+    //if the mouse is over this square, send it to logic
+    private void OnMouseOver()
+    {
+        logic._MousePosition[0] = _pos[0];
+        logic._MousePosition[1] = _pos[1];
     }
 }
