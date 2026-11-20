@@ -161,6 +161,12 @@ public class Move : MonoBehaviour
         
     }
 
+    private void OnMouseOver()
+    {
+        logic._MousePosition[0] = _CurrentPos[0];
+        logic._MousePosition[1] = _CurrentPos[1];
+    }
+
 }
     
         
